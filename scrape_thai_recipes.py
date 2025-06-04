@@ -85,23 +85,44 @@ def extract_contact_links_from_html(html, domain):
     return list(contact_links)
 
 def main():
-    query = "thai dishes recipies"
+    # Исправленная фраза поиска: без опечатки "recipes"
+    query = "thai dishes recipes"
     all_links = []
+
+    # 1) Делаем 5 запросов (5 страниц выдачи) и собираем весь «сырый» HTML
+    all_html = []
     for start in range(0, 50, 10):
         html = fetch_google_page(query, start)
         if html:
-            links = extract_links_from_google_html(html)
-            all_links.extend(links)
+            all_html.append(html)
+    print(f"Получили {len(all_html)} HTML-страниц выдачи от Google")
+
+    # 2) Извлекаем ссылки из каждого HTML
+    for html in all_html:
+        links = extract_links_from_google_html(html)
+        all_links.extend(links)
+    print(f"Извлечено {len(all_links)} «сырых» ссылок из Google-страниц")
 
     # Извлечь уникальные домены, отфильтровать пустые
     all_domains = [get_domain_from_url(link) for link in all_links]
     unique_domains = list({d for d in all_domains if d})
+    print(f"Уникальных доменов после фильтрации: {len(unique_domains)}")
 
-    print("Обработка доменов:")
-    records = []  # каждая запись: (domain, page_url, emails_list, contact_links_list)
+    # Если нет доменов — выходим
+    if not unique_domains:
+        print("‼️ Ничего не найдено, проверьте query или доступ к Google-страницам")
+        return
 
+    print("Первый список доменов:")
+    for d in unique_domains[:10]:
+        print(" ", d)
+
+    # Подготовим список записей для CSV
+    records = []
+
+    print("\nОбходим все домены для поиска e-mail и contact-ссылок:")
     for domain in unique_domains:
-        print(f"  → {domain}")
+        print(f"  → Обрабатываем домен: {domain}")
         homepage_html = ""
         try:
             r = requests.get(f"https://{domain}/", headers={"User-Agent": "Mozilla/5.0"}, timeout=10)
@@ -111,23 +132,19 @@ def main():
             homepage_html = ""
 
         if homepage_html:
-            # 1) Ищем e-mail на главной
             emails_main = extract_emails_from_html(homepage_html)
+            valid_contacts = [
+                u for u in extract_contact_links_from_html(homepage_html, domain)
+                if u.startswith("http")
+            ]
         else:
             emails_main = []
+            valid_contacts = []
 
-        # 2) Ищем contact-ссылки на главной
-        if homepage_html:
-            contacts = extract_contact_links_from_html(homepage_html, domain)
-        else:
-            contacts = []
-        # Фильтруем только корректные ссылки, уже внутри функции
-        valid_contacts = contacts
-
-        # 3) Записываем результаты для главной (даже если e-mail пустые)
+        # Добавляем запись для главной страницы
         records.append((domain, f"https://{domain}/", emails_main, valid_contacts))
 
-        # 4) Для каждой contact-ссылки заходим и ищем e-mail
+        # Для каждой contact-ссылки заходим и ищем e-mail
         for clink in valid_contacts:
             try:
                 rc = requests.get(clink, headers={"User-Agent": "Mozilla/5.0"}, timeout=10)
@@ -138,7 +155,6 @@ def main():
                     emails_contact = []
             except Exception:
                 emails_contact = []
-            # Записываем запись для contact-страницы
             records.append((domain, clink, emails_contact, valid_contacts))
 
     # Записываем всё в result.csv
@@ -151,7 +167,7 @@ def main():
             contacts_str = ",".join(contacts_list)
             writer.writerow([current_time, domain, page_url, emails_str, contacts_str])
 
-    print("\nСохранили результат в result.csv, строк:", len(records))
+    print(f"\nСохранили результат в result.csv, записей: {len(records)}")
 
 if __name__ == "__main__":
     main() 
