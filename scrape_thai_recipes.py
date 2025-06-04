@@ -82,6 +82,40 @@ def main():
     for d in unique_domains[:10]:
         print(d)
 
+    print("\nПроверяем первые 5 доменов на e-mail и contact-ссылки:")
+    for domain in unique_domains[:5]:
+        print(f"\n--- Домены: {domain} ---")
+        # Пробуем получить главную страницу
+        homepage_html = ""
+        try:
+            homepage_html = fetch_google_page(domain, 0)  # для домена вместо поисков запроса используем прямой GET
+        except Exception as e:
+            print(f"Ошибка при запросе домашней страницы {domain}: {e}")
+
+        # Если homepage_html пустая строка, пробуем через requests напрямую
+        if not homepage_html:
+            try:
+                r = requests.get(f"https://{domain}/", headers={"User-Agent": "Mozilla/5.0"}, timeout=10)
+                if r.status_code == 200:
+                    homepage_html = r.text
+            except Exception as e:
+                print(f"Ошибка при прямом запросе https://{domain}/: {e}")
+
+        if homepage_html:
+            # Ищем e-mail на главной
+            emails = extract_emails_from_html(homepage_html)
+            print(" Найденные e-mail на главной:", emails if emails else "Нет e-mail")
+
+            # Ищем contact-ссылки
+            contact_links = extract_contact_links_from_html(homepage_html, domain)
+            if contact_links:
+                print(" Найденные contact-ссылки:")
+                for url in contact_links[:3]:
+                    print("  ", url)
+            else:
+                print(" Нет contact-ссылок на главной")
+        else:
+            print(" Не удалось получить HTML главной страницы")
 
 if __name__ == "__main__":
     main() 
