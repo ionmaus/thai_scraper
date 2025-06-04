@@ -75,8 +75,9 @@ def main():
             links = extract_links_from_google_html(html)
             all_links.extend(links)
 
+    # Извлекаем домены, убираем пустые строки
     all_domains = [get_domain_from_url(link) for link in all_links]
-    unique_domains = list(set(all_domains))
+    unique_domains = list({d for d in all_domains if d})  # фильтруем d != ""
 
     print("Первый список доменов:")
     for d in unique_domains[:10]:
@@ -85,32 +86,29 @@ def main():
     print("\nПроверяем первые 5 доменов на e-mail и contact-ссылки:")
     for domain in unique_domains[:5]:
         print(f"\n--- Домены: {domain} ---")
-        # Пробуем получить главную страницу
         homepage_html = ""
-        try:
-            homepage_html = fetch_google_page(domain, 0)  # для домена вместо поисков запроса используем прямой GET
-        except Exception as e:
-            print(f"Ошибка при запросе домашней страницы {domain}: {e}")
 
-        # Если homepage_html пустая строка, пробуем через requests напрямую
-        if not homepage_html:
-            try:
-                r = requests.get(f"https://{domain}/", headers={"User-Agent": "Mozilla/5.0"}, timeout=10)
-                if r.status_code == 200:
-                    homepage_html = r.text
-            except Exception as e:
-                print(f"Ошибка при прямом запросе https://{domain}/: {e}")
+        # Пробуем запрос главной страницы через requests
+        try:
+            r = requests.get(f"https://{domain}/", headers={"User-Agent": "Mozilla/5.0"}, timeout=10)
+            if r.status_code == 200:
+                homepage_html = r.text
+            else:
+                homepage_html = ""
+        except Exception as e:
+            print(f"Ошибка при запросе https://{domain}/: {e}")
 
         if homepage_html:
             # Ищем e-mail на главной
             emails = extract_emails_from_html(homepage_html)
             print(" Найденные e-mail на главной:", emails if emails else "Нет e-mail")
 
-            # Ищем contact-ссылки
+            # Ищем contact-ссылки и фильтруем только корректные URL
             contact_links = extract_contact_links_from_html(homepage_html, domain)
-            if contact_links:
+            valid_contacts = [u for u in contact_links if u.startswith("http")]
+            if valid_contacts:
                 print(" Найденные contact-ссылки:")
-                for url in contact_links[:3]:
+                for url in valid_contacts[:3]:
                     print("  ", url)
             else:
                 print(" Нет contact-ссылок на главной")
