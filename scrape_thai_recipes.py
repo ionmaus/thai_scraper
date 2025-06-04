@@ -40,6 +40,32 @@ def get_domain_from_url(full_url):
         domain = domain[4:]
     return domain
 
+def extract_emails_from_html(html):
+    emails = set()
+    soup = BeautifulSoup(html, "html.parser")
+    # Ищем все mailto:
+    for a in soup.find_all("a", href=True):
+        href = a["href"]
+        if href.startswith("mailto:"):
+            email = href.split("mailto:")[1]
+            emails.add(email)
+    # Ищем все вхождения вида user@domain.com
+    found = re.findall(EMAIL_PATTERN, html)
+    for email in found:
+        emails.add(email)
+    return list(emails)
+
+def extract_contact_links_from_html(html, domain):
+    soup = BeautifulSoup(html, "html.parser")
+    contact_links = set()
+    keywords = ["contact", "about", "advertis", "support", "impressum"]
+    for a in soup.find_all("a", href=True):
+        href = a["href"].lower()
+        if any(k in href for k in keywords):
+            full_url = requests.compat.urljoin(f"https://{domain}/", a["href"])
+            contact_links.add(full_url)
+    return list(contact_links)
+
 def main():
     query = "thai dishes recipies"
     all_links = []
