@@ -2,9 +2,10 @@ import requests
 import csv
 from datetime import datetime
 import re
+import os
 
-# ВСТАВЬ СВОЙ КЛЮЧ СЮДА (после кавычек):
-API_KEY = "e9fda2b71d430efbcef1581ba8ec20d0970a210f"
+# API key for Serper (set SERPER_API_KEY environment variable)
+API_KEY = os.getenv("SERPER_API_KEY")
 QUERY = "thai dishes recipes"
 
 headers = {"X-API-KEY": API_KEY, "Content-Type": "application/json"}
