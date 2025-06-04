@@ -1,0 +1,9 @@
+result.csv
+debug_page_*.html
+
+# Python cache files
+__pycache__/
+*.py[cod]
+
+# Logs
+*.log
