@@ -40,3 +40,11 @@ python3 scrape_thai_recipes.py
 ```
 
 After running either script, check the generated `result.csv` file for the output.
+
+Example `result.csv` format:
+
+```csv
+date,domain,page,emails,form_found
+2024-01-01 12:00,example.com,https://example.com/,info@example.com,
+2024-01-01 12:00,example.com,https://example.com/contact,,True
+```
