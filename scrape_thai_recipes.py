@@ -98,8 +98,8 @@ def has_contact_form(html):
     return soup.find("form") is not None
 
 def main():
-    # Используем оригинальную фразу с опечаткой (если нужно), либо можно вернуть "recipes":
-    query = "thai dishes recipes"
+    # Используем фразу с опечаткой в слове "recipies"
+    query = "thai dishes recipies"
 
     # 1) Собираем «сырые» HTML-ответы от Google (5 страниц)
     all_html = []
