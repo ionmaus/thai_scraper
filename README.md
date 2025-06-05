@@ -22,7 +22,7 @@ export SERPER_API_KEY=your_key_here
 
 ### `serper_scraper.py`
 
-Queries the Serper API for Thai recipe sites, visits the results and saves found e‑mails to `result.csv`.
+Queries the Serper API for Thai recipe sites, visits up to 50 organic results (the first five pages) and saves found e‑mails to `result.csv`.
 Run it with:
 
 ```bash
