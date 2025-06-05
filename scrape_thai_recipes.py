@@ -156,7 +156,11 @@ def main():
         print(f"  → Обрабатываем домен: {domain}")
         homepage_html = ""
         try:
-            r = requests.get(f"https://{domain}/", headers={"User-Agent": "Mozilla/5.0"}, timeout=10)
+            r = requests.get(
+                f"https://{domain}/",
+                headers={"User-Agent": "Mozilla/5.0"},
+                timeout=10,
+            )
             if r.status_code == 200:
                 homepage_html = r.text
         except Exception:
@@ -165,7 +169,8 @@ def main():
         if homepage_html:
             emails_main = extract_emails_from_html(homepage_html)
             valid_contacts = [
-                u for u in extract_contact_links_from_html(homepage_html, domain)
+                u
+                for u in extract_contact_links_from_html(homepage_html, domain)
                 if u.startswith("http")
             ]
         else:
@@ -173,7 +178,7 @@ def main():
             valid_contacts = []
 
         # Добавляем запись для главной страницы
-        records.append((domain, f"https://{domain}/", emails_main, valid_contacts))
+        records.append((domain, f"https://{domain}/", emails_main, ""))
 
         # Для каждой найденной contact-ссылки заходим на неё и ищем e-mail
         for clink in valid_contacts:
@@ -187,19 +192,20 @@ def main():
 
             if cl_html:
                 emails_contact = extract_emails_from_html(cl_html)
+                form_found_flag = "True" if has_contact_form(cl_html) else "False"
             else:
                 emails_contact = []
-            records.append((domain, clink, emails_contact, valid_contacts))
+                form_found_flag = "False"
+            records.append((domain, clink, emails_contact, form_found_flag))
 
     # Записываем всё в result.csv
     current_time = datetime.now().strftime("%Y-%m-%d %H:%M")
     with open("result.csv", "w", newline="", encoding="utf-8") as f:
         writer = csv.writer(f)
-        writer.writerow(["date", "domain", "page", "emails", "contact_links"])
-        for domain, page_url, emails_list, contacts_list in records:
+        writer.writerow(["date", "domain", "page", "emails", "form_found"])
+        for domain, page_url, emails_list, form_flag in records:
             emails_str = ",".join(emails_list)
-            contacts_str = ",".join(contacts_list)
-            writer.writerow([current_time, domain, page_url, emails_str, contacts_str])
+            writer.writerow([current_time, domain, page_url, emails_str, form_flag])
 
     print(f"\nСохранили результат в result.csv, строк: {len(records)}")
 
