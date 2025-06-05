@@ -91,12 +91,8 @@ for domain, homepage in domain_urls:  # обрабатываем все найд
 
     for c_link in contacts:
         c_html = try_get(c_link)
-        if c_html:
-            c_emails = find_emails(c_html)
-            form_found_flag = "True" if has_contact_form(c_html) else "False"
-        else:
-            c_emails = []
-            form_found_flag = "False"
+        c_emails = find_emails(c_html) if c_html else []
+        form_found_flag = "True" if c_html and has_contact_form(c_html) else "False"
         records.append([
             now,
             domain,
