@@ -3,9 +3,13 @@ import csv
 from datetime import datetime
 import re
 import os
+import sys
 
 # API key for Serper (set SERPER_API_KEY environment variable)
 API_KEY = os.getenv("SERPER_API_KEY")
+if not API_KEY:
+    print("SERPER_API_KEY environment variable not set. Please set it before running the script.")
+    sys.exit(1)
 QUERY = "thai dishes recipes"
 
 headers = {"X-API-KEY": API_KEY, "Content-Type": "application/json"}
