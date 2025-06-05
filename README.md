@@ -32,6 +32,7 @@ python3 serper_scraper.py
 ### `scrape_thai_recipes.py`
 
 Fetches Google result pages directly without using the API. The collected data is also written to `result.csv`.
+By default the script searches Google for the phrase `"thai dishes recipies"`.
 Run it with:
 
 ```bash
